@@ -1,0 +1,9 @@
+Describe the clothing or accessory item you see in the center of the image as succinctly as possible, only describe the clothing or accessory item and print no more tokens. Remember that the items I wear may include:
+
+* Headbands
+* Hats
+* Wristbands
+
+if an item does not resemble a clothing item to you, rethink your answer as you are probably wrong.
+
+Now print your answer:
