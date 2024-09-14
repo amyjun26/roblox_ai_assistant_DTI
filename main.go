@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"context"
+	"encoding/base64"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -9,7 +11,10 @@ import (
 	"time"
 
 	"github.com/corona10/goimagehash"
+	"github.com/joho/godotenv"
 	"github.com/kbinani/screenshot"
+	"github.com/openai/openai-go"
+	"github.com/openai/openai-go/option"
 )
 
 func main() {
@@ -54,6 +59,12 @@ func main() {
 }
 
 func main_loop() {
+	// Load .env
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
 	msg_chan := make(chan string)
 
 	// X image hashing
@@ -70,6 +81,10 @@ func main_loop() {
 	if err != nil {
 		panic(err)
 	}
+
+	client := openai.NewClient(
+		option.WithAPIKey(os.Getenv("OPENAI_KEY")),
+	)
 
 	frame := 0
 	for {
@@ -118,17 +133,27 @@ func main_loop() {
 					y_clothing_img := int(float32(CLOTHING_START_Y) + HEART_OFFSET_Y*float32(y))
 					clothing_subimg := img.SubImage(image.Rect(x_clothing_img, y_clothing_img, x_clothing_img+CLOTHING_IMG_W, y_clothing_img+CLOTHING_IMG_H))
 
-					// Save to filesystem for testing
+					// Create image buf
 					var img_buf bytes.Buffer
 					err = jpeg.Encode(&img_buf, clothing_subimg, nil)
 					if err != nil {
 						panic(err)
 					}
 
-					err = os.WriteFile(fmt.Sprintf("output/clothing_%d_%d_%d_%d.jpg", frame, x, y, x_img_dist), img_buf.Bytes(), 0644)
+					// Convert to base64 string
+					// Get caption
+					chat_completion, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
+						Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+							openai.UserMessage("Describe the clothing item you see in the center of the image as succinctly as possible, only describe the clothing and print no more tokens: The clothing item in the center of the image is a"),
+							openai.UserMessageParts(openai.ImagePart(fmt.Sprintf("data:image/jpeg;base64,%s", base64.StdEncoding.EncodeToString(img_buf.Bytes())))),
+						}),
+						Model: openai.F(openai.ChatModelGPT4o),
+					})
 					if err != nil {
 						panic(err)
 					}
+
+					fmt.Printf("Caption: %s\n", chat_completion.Choices[0].Message.Content)
 				}
 			}
 		}
