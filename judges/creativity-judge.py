@@ -1,4 +1,6 @@
 import openai
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def evaluate_outfit(image_url, theme):
     prompt = (f"You are a fashion judge for the Roblox game 'Dress To Impress.' Based on the theme {theme} and following guiding questions, provide detailed, objective feedback along with a specific numerical rating out of 10, where 10 is the best.\n"
