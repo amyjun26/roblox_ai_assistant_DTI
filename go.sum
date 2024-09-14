@@ -1,3 +1,5 @@
+github.com/AllenDang/w32 v0.0.0-20180428130237-ad0a36d80adc h1:w3fW4b1hPf6/cfdQQ/vu9V8eBeQmuLZIaUMj81nIzYQ=
+github.com/AllenDang/w32 v0.0.0-20180428130237-ad0a36d80adc/go.mod h1:1rHKulT5eD2DzdKxDXUZRKtBfkTzLmTL42ZmEmOfyrs=
 github.com/BurntSushi/xgb v0.0.0-20210121224620-deaf085860bc h1:7D+Bh06CRPCJO3gr2F7h1sriovOZ8BMhca2Rg85c2nk=
 github.com/BurntSushi/xgb v0.0.0-20210121224620-deaf085860bc/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/cretz/go-scrap v0.0.0-20200312194224-54530fbef1b2 h1:97zjv50XCYl6M++ID56PsKZcpsbT2fnSK5FFGnnFTmI=
@@ -10,6 +12,8 @@ github.com/jezek/xgb v1.1.1 h1:bE/r8ZZtSv7l9gk6nU0mYx51aXrvnyb44892TwSaqS4=
 github.com/jezek/xgb v1.1.1/go.mod h1:nrhwO0FX/enq75I7Y7G8iN1ubpSGZEiA3v9e9GyRFlk=
 github.com/kbinani/screenshot v0.0.0-20240820160931-a8a2c5d0e191 h1:5UHVWNX1qrIbNw7OpKbxe5bHkhHRk3xRKztMjERuCsU=
 github.com/kbinani/screenshot v0.0.0-20240820160931-a8a2c5d0e191/go.mod h1:Pmpz2BLf55auQZ67u3rvyI2vAQvNetkK/4zYUmpauZQ=
+github.com/kesarion/screenshot v0.0.0-20161221131418-7dc2637352ce h1:M/8Vhwb3luw8+0CerZVyL0XtLyLZIku74R45FVLQsoo=
+github.com/kesarion/screenshot v0.0.0-20161221131418-7dc2637352ce/go.mod h1:Z0WvZClgvNuMJsSQ0/cVCAmvV1i/PkTugfS/f02/1Rw=
 github.com/lxn/win v0.0.0-20210218163916-a377121e959e h1:H+t6A/QJMbhCSEH5rAuRxh+CtW96g0Or0Fxa9IKr4uc=
 github.com/lxn/win v0.0.0-20210218163916-a377121e959e/go.mod h1:KxxjdtRkfNoYDCUP5ryK7XJJNTnpC8atvtmTheChOtk=
 github.com/vova616/screenshot v0.0.0-20220801010501-56c10359473c h1:mqgl+NQgzZ30EX7oA3uNIlPn6dAgG6sThBiUodUzZpU=

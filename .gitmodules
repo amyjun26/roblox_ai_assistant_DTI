@@ -1,0 +1,3 @@
+[submodule "screenshot-go"]
+	path = screenshot-go
+	url = https://github.com/vova616/screenshot
