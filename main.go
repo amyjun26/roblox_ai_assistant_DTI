@@ -72,7 +72,7 @@ type DTIData struct {
 	Theme         string   `json:"theme"`
 	JudgeOpinion  string   `json:"judge_opinion"`
 	NumPlayers    int      `json:"num_players"`
-	NumStars      float32  `json:"avg_rating"`
+	NumStars      float32  `json:"num_stars"`
 	Complete      bool     `json:"complete"`
 }
 
