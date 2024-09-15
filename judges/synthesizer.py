@@ -94,8 +94,8 @@ def synthesize_feedback(feedback_dict, image_url, theme):
 
 #Testing
 
-image_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'snow_white.jpg')
+image_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'caillou.png')
 base64_url = image_to_base64(image_path)
-print(synthesize_feedback(base64_url, "Disney Princess"))
+print(synthesize_feedback(base64_url, "brat"))
 
 
