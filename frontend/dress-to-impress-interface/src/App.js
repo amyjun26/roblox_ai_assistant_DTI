@@ -8,7 +8,21 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [actualResult, setActualResult] = useState("");
   const [waitingForGame, setIsWaitingForGame] = useState(true);
+  const [actualImageURL, setActualImageURL] = useState("");
+
   const theme = "kids show";
+
+  const socket = new WebSocket("ws://localhost:8080/ws");
+  socket.addEventListener("message", (event) => {
+    let payload = JSON.parse(event.data);
+    if (payload.complete) {
+      console.log(payload);
+      const rating = payload.num_stars / payload.num_players;
+      setActualResult(rating * 2 + "/10");
+      setActualImageURL(payload.outfit);
+    }
+  });
+
   useEffect(() => {
     const fetchFeedback = async () => {
       try {
@@ -19,8 +33,7 @@ function App() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            image_url:
-              "https://i.kinja-img.com/image/upload/c_fit,q_60,w_645/c23152596efe8dd4c94cdf7afb233e67.jpg",
+            image_url: actualImageURL,
             theme: theme,
           }),
         });
@@ -42,16 +55,6 @@ function App() {
 
     // Call fetchFeedback function when component mounts
     fetchFeedback();
-
-    const socket = new WebSocket("ws://localhost:8080/ws");
-    socket.addEventListener("message", (event) => {
-      let payload = JSON.parse(event.data);
-      if (payload.complete) {
-        console.log(payload);
-        const rating = payload.num_stars / payload.num_players;
-        setActualResult(rating * 2 + "/10");
-      }
-    });
   }, []);
 
   const getRandomImage = (folder, numImages) => {
