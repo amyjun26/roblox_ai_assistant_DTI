@@ -5,15 +5,19 @@ import (
 	"context"
 	_ "embed"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/jpeg"
+	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/corona10/goimagehash"
-	"github.com/davecgh/go-spew/spew"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"github.com/kbinani/screenshot"
 	"github.com/openai/openai-go"
@@ -52,13 +56,60 @@ const THEME_OFFSET_W int = 696
 const THEME_OFFSET_H int = 57
 
 type DTIData struct {
-	ClothingItems []string
-	Theme         string
-	JudgeOpinion  string
+	ClothingItems []string `json:"clothing_items"`
+	Theme         string   `json:"theme"`
+	JudgeOpinion  string   `json:"judge_opinion"`
 }
 
+var websocket_con *websocket.Conn = nil
+
 func main() {
-	main_loop()
+	// Load .env
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
+	r := mux.NewRouter()
+
+	r.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+
+	})
+
+	var upgrader = websocket.Upgrader{} // use default options
+	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		ws, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			fmt.Printf("Upgrade error: %v\n", err)
+			return
+		}
+		defer ws.Close()
+
+		for {
+			_, message, err := ws.ReadMessage()
+			if err != nil {
+				fmt.Printf("Read error: %v\n", err)
+				return
+			}
+
+			fmt.Printf("Recv: %v\n", message)
+
+			// err = ws.WriteMessage(mt, message)
+			// if err != nil {
+			// 	log.Println("write:", err)
+			// 	break
+			// }
+		}
+	})
+
+	// For all static files that didn't match any other handlers
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("frontend/dress-to-impress-interface/build")))
+
+	// Run all our tasks
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go main_loop()
+	wg.Wait()
 }
 
 func determine_number_of_clothing_items(client *openai.Client, x_img_hash *goimagehash.ImageHash, display_screenshot *image.RGBA) int {
@@ -184,12 +235,6 @@ func get_dti_data(client *openai.Client, x_img_hash *goimagehash.ImageHash, disp
 }
 
 func main_loop() {
-	// Load .env
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
-
 	msg_chan := make(chan string)
 
 	// X image hashing
@@ -228,7 +273,22 @@ func main_loop() {
 		if recorded_number_of_clothing_items != 0 && recorded_number_of_clothing_items != last_recorded_number_of_clothing_items {
 			last_recorded_number_of_clothing_items = recorded_number_of_clothing_items
 
-			spew.Dump(get_dti_data(client, x_img_hash, img))
+			// Get data
+			dti_data := get_dti_data(client, x_img_hash, img)
+
+			// Send to client
+			if websocket_con != nil {
+				dti_data_payload, err := json.Marshal(dti_data)
+				if err != nil {
+					panic(err)
+				}
+
+				// Send as JSON
+				err = websocket_con.WriteMessage(websocket.TextMessage, dti_data_payload)
+				if err != nil {
+					panic(err)
+				}
+			}
 		}
 
 		fmt.Printf("Time to take screenshot: %v\n", time.Since(start))
