@@ -1,23 +1,38 @@
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
+  const [judgesResponses, setJudgesResponses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch the data from the Flask API
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/api/judges_responses')
+      .then(response => response.json())
+      .then(data => {
+        setJudgesResponses(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error fetching judges' responses:", error);
+      });
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>Dress to Impress - Judges' Feedback</h1>
+      <div className="judge-container">
+        {judgesResponses.map((response, index) => (
+          <div key={index} className="judge-response">
+            <h2>{response.judge}</h2>
+            <p>{response.feedback}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
