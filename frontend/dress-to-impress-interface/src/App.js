@@ -1,47 +1,44 @@
 import React, { useState, useEffect } from "react";
 
 function App() {
-  const [judgesResponses, setJudgesResponses] = useState([]);
-  const [error, setError] = useState(null);
-
+  const [feedback, setFeedback] = useState("");
+  const [error, setError] = useState("");
+  const theme = "kids show";
   useEffect(() => {
-    const fetchJudgesResponses = async () => {
+    const fetchFeedback = async () => {
       try {
-        // Make the API request to the Flask server
-        const response = await fetch("http://localhost:5000/evaluate", {
-          method: "GET",
+        const response = await fetch("http://127.0.0.1:5000/synthesize", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            image_url:
+              "https://i.kinja-img.com/image/upload/c_fit,q_60,w_645/c23152596efe8dd4c94cdf7afb233e67.jpg",
+            theme: theme,
+          }),
         });
 
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
 
-        // Parse the JSON response
-        const data = await response.json();
-
-        // Update the state with the received data
-        setJudgesResponses(data);
-      } catch (error) {
-        console.error("Error fetching judges' responses:", error);
-        setError(error.message);
+        const result = await response.json();
+        // Process the feedback and update state
+        setFeedback(result.feedback);
+      } catch (err) {
+        setError(err.message);
       }
     };
 
-    // Call the fetch function when the component mounts
-    fetchJudgesResponses();
+    // Call fetchFeedback function when component mounts
+    fetchFeedback();
   }, []);
 
   return (
     <div className="App">
-      <h1>Dress to Impress - Judges' Feedback</h1>
-      <div className="judge-container">
-        {judgesResponses.map((response, index) => (
-          <div key={index} className="judge-response">
-            <h2>{response.judge}</h2>
-            <p>{response.feedback}</p>
-          </div>
-        ))}
-      </div>
+      <h1>Dress to Impress - Overall Feedback</h1>
+      <div className="judge-container">{feedback}</div>
     </div>
   );
 }
