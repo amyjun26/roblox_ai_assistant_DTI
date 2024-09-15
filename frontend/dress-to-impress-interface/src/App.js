@@ -1,26 +1,35 @@
 import React, { useState, useEffect } from "react";
-import "./App.css";
 
 function App() {
   const [judgesResponses, setJudgesResponses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch the data from the Flask API
   useEffect(() => {
-    fetch("http://localhost:3000/api/judges_responses")
-      .then((response) => response.json())
-      .then((data) => {
-        setJudgesResponses(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching judges' responses:", error);
-      });
-  }, []);
+    const fetchJudgesResponses = async () => {
+      try {
+        // Make the API request to the Flask server
+        const response = await fetch("http://localhost:5000/evaluate", {
+          method: "GET",
+        });
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        // Parse the JSON response
+        const data = await response.json();
+
+        // Update the state with the received data
+        setJudgesResponses(data);
+      } catch (error) {
+        console.error("Error fetching judges' responses:", error);
+        setError(error.message);
+      }
+    };
+
+    // Call the fetch function when the component mounts
+    fetchJudgesResponses();
+  }, []);
 
   return (
     <div className="App">
