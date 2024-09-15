@@ -34,6 +34,7 @@ def get_prompt(theme):
     return prompt
     
 def evaluate_outfit(image_url, theme):
+    print("in creativity judge now")
     response = openai.ChatCompletion.create(
         model="gpt-4o",  
         messages=[
@@ -42,6 +43,7 @@ def evaluate_outfit(image_url, theme):
         ],
         max_tokens=200  
     )
+    print("repsonse ok")
 
     feedback = response['choices'][0]['message']['content'].strip()
 

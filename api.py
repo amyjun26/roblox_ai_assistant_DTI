@@ -13,11 +13,11 @@ def synthesize():
         theme = data.get('theme')
         #print("preparing to call synthesize...")
         # Call the function from synthesizer.py
-        feedback = synthesize_feedback(image_url, theme)
-        #print("this is the feedback:")
-        #print(feedback)
+        feedback, avg_score = synthesize_feedback(image_url, theme)
+        print("this is the score:")
+        print(avg_score)
         # Return the result as JSON
-        return jsonify({"feedback": feedback})
+        return jsonify({"feedback": feedback, "avg_score": avg_score})
         #return jsonify({"feedback": "heyyyyy"})
 
     except Exception as e:

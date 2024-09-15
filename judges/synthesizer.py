@@ -45,17 +45,18 @@ def image_to_base64(image_source):
 
 #judges_feedback from the output from the other LLM judges
 def synthesize_feedback(image_url, theme):
-    # print("in synthesize_feedback() now!\n")
+    print("in synthesize_feedback() now!\n")
     # print(f"Image URL: {image_url}")
     # print(f"Theme: {theme}")
 
     b_img = image_to_base64(image_url)
     #print(f"the b64 image link is {b_img}\n")
+    print("got b64 url now tryna get scores")
     c_feedback, c_score = creativity_judge_evaluate_outfit(b_img, theme)
     t_feedback, t_score = technical_fashion_evaluate_outfit(b_img, theme)
     a_feedback, a_score = accuracy_evaluate_outfit(b_img, theme)
     color_feedback, color_score = color_coordination_evaluate_outfit(b_img, theme)
-    #print(f"calculatinggg scores are: {c_score}, {t_score}, {a_score}, {color_score}")
+    print(f"calculatinggg scores are: {c_score}, {t_score}, {a_score}, {color_score}")
     avg_score = (c_score + t_score + a_score + color_score) / 4.0
 
     synthesizer_prompt = (
@@ -81,8 +82,9 @@ def synthesize_feedback(image_url, theme):
     final_judgement = synthesized_output['choices'][0]['message']['content']
 
     #print("FINAL JUDGEMENT: \n" + final_judgement)
-
-    return final_judgement
+    print("average score is: ")
+    print(avg_score)
+    return (final_judgement, str(avg_score))
 
 #Testing
 
