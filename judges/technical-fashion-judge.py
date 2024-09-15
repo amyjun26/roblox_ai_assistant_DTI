@@ -24,7 +24,8 @@ def get_prompt(theme):
     prompt = (
         f"Based on the theme: {theme},\n"
         "Are the textures and fabrics used effectively?\n"
-        "In the context of the theme, evaluate how the skin tone matches with the color and style of the clothes\n"
+        "Is the outfit well-balanced in terms of colors, fit, and proportions?\n"
+        "In the context of the theme, evaluate how the skin tone matches with the color and style of the clothes?\n"
         "Feedback: [Your detailed feedback here]\n"
         "Rating: [Your rating here]"
     )
