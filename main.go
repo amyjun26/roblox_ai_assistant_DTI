@@ -79,6 +79,7 @@ type DTIData struct {
 var last_dti_data DTIData = DTIData{}
 var websocket_con *websocket.Conn = nil
 var last_star_count int = 0
+var last_heading_value string = ""
 
 func main() {
 	// Load .env
@@ -278,7 +279,7 @@ func change_star_count(client *openai.Client, display_screenshot *image.RGBA) {
 	// Proceed only if star count correct
 	chat_output := chat_completion.Choices[0].Message.Content
 	if strings.Contains(chat_output, "THE_TEXT:") {
-		star_count, err := strconv.Atoi(chat_completion.Choices[0].Message.Content)
+		star_count, err := strconv.Atoi(chat_completion.Choices[0].Message.Content[strings.Index(chat_output, "THE_TEXT:")+len("THE_TEXT: "):])
 		if err == nil {
 			if star_count != last_star_count && last_star_count != 0 {
 				// Determine number of stars obtained
@@ -294,6 +295,50 @@ func change_star_count(client *openai.Client, display_screenshot *image.RGBA) {
 			} else if last_star_count == 0 {
 				last_star_count = star_count
 			}
+		}
+	}
+}
+
+func handle_player_num(client *openai.Client, display_screenshot *image.RGBA) {
+	subimg := display_screenshot.SubImage(image.Rect(END_ROUND_HEADER_OFFSET_X, END_ROUND_HEADER_OFFSET_Y, END_ROUND_HEADER_OFFSET_X+END_ROUND_HEADER_OFFSET_W, END_ROUND_HEADER_OFFSET_Y+END_ROUND_HEADER_OFFSET_H))
+
+	// Create image buf
+	var img_buf bytes.Buffer
+	err := jpeg.Encode(&img_buf, subimg, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	// Convert image to base64 string
+	// Get star count
+	chat_completion, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(OCR_PROMPT),
+			openai.UserMessageParts(openai.ImagePart(fmt.Sprintf("data:image/jpeg;base64,%s", base64.StdEncoding.EncodeToString(img_buf.Bytes())))),
+		}),
+		Model: openai.F(openai.ChatModelGPT4o),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	chat_output := chat_completion.Choices[0].Message.Content
+	if strings.Contains(chat_output, "THE_TEXT:") {
+		header_str := chat_completion.Choices[0].Message.Content[strings.Index(chat_output, "THE_TEXT:")+len("THE_TEXT: "):]
+
+		// Header has changed, increment number of players
+		if header_str != last_heading_value {
+			last_heading_value = header_str
+
+			// Increment by 2 if "and" is detected
+			if strings.Contains(header_str, "and") {
+				last_dti_data.NumPlayers += 2
+			} else {
+				last_dti_data.NumPlayers += 1
+			}
+
+			// Send payload
+			send_dti_payload()
 		}
 	}
 }
@@ -360,12 +405,12 @@ func main_loop() {
 		}
 
 		// Debug save
-		var img_buf bytes.Buffer
-		err = jpeg.Encode(&img_buf, img, nil)
-		if err != nil {
-			panic(err)
-		}
-		os.WriteFile(fmt.Sprintf("test_frame_%d.jpg", frame), img_buf.Bytes(), 0644)
+		//var img_buf bytes.Buffer
+		//err = jpeg.Encode(&img_buf, img, nil)
+		//if err != nil {
+		//	panic(err)
+		//}
+		//os.WriteFile(fmt.Sprintf("test_frame_%d.jpg", frame), img_buf.Bytes(), 0644)
 
 		// Only run computationally expensive task if we have to
 		recorded_number_of_clothing_items := determine_number_of_clothing_items(x_img_hash, img)
@@ -384,6 +429,9 @@ func main_loop() {
 
 		// Attempt to change star count
 		change_star_count(client, img)
+
+		// Attempt to change number of players
+		handle_player_num(client, img)
 
 		fmt.Printf("Time to take screenshot: %v\n", time.Since(start))
 
