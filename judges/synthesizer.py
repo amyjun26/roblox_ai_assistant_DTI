@@ -7,14 +7,19 @@ import os
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# def adjust_credibility(rating):
-#         """
-#         Adjusts the credibility based on a logarithmic scaling of the rating from 1 to 10.
-#         Ratings closer to 1 will have a much lower scaling factor, while ratings closer to 10
-#         will have a much higher scaling factor.
-#         """
-#         # Logarithmic scaling of rating between 1 and 10. 
-#         return 1 + (math.log(rating + 1) / math.log(11))
+def image_to_base64(image_path):
+    with open(image_path, "rb") as image_file:
+        # Read the image file in binary mode
+        image_data = image_file.read()
+
+        # Convert binary data to base64 string
+        base64_encoded = base64.b64encode(image_data).decode('utf-8')
+
+        # Create a Base64 URL
+        file_extension = image_path.split('.')[-1]
+        base64_url = f"data:image/{file_extension};base64,{base64_encoded}"
+
+    return base64_url
 
 
 #judges_feedback from the output from the other LLM judges
