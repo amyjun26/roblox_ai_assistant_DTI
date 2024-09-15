@@ -3,6 +3,7 @@ from accuracy_theme_judge import evaluate_outfit as accuracy_evaluate_outfit
 from color_coordination_judge import evaluate_outfit as color_coordination_evaluate_outfit
 from creativity_judge import evaluate_outfit as creativity_judge_evaluate_outfit
 from technical_fashion_judge import evaluate_outfit as technical_fashion_evaluate_outfit
+import os
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
