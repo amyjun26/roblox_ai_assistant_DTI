@@ -10,6 +10,7 @@
 	"judge_opinion": "4/10",
 	"num_players": 8,
 	"num_stars": 8,
+    "outfit": "[BASE64 encoded image]",
 	"complete": true,
 }
 ```

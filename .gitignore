@@ -3,3 +3,4 @@ output
 venv
 node_modules
 node_modules/
+test_frame_*.jpg

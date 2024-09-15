@@ -73,6 +73,7 @@ type DTIData struct {
 	JudgeOpinion  string   `json:"judge_opinion"`
 	NumPlayers    int      `json:"num_players"`
 	NumStars      float32  `json:"num_stars"`
+	Outfit        string   `json:"outfit"`
 	Complete      bool     `json:"complete"`
 }
 
@@ -308,7 +309,7 @@ var possible_header_strings [6]string = [6]string{
 	"Voting complete!",
 }
 
-func handle_player_num(client *openai.Client, display_screenshot *image.RGBA) {
+func handle_header(client *openai.Client, display_screenshot *image.RGBA) {
 	subimg := display_screenshot.SubImage(image.Rect(END_ROUND_HEADER_OFFSET_X, END_ROUND_HEADER_OFFSET_Y, END_ROUND_HEADER_OFFSET_X+END_ROUND_HEADER_OFFSET_W, END_ROUND_HEADER_OFFSET_Y+END_ROUND_HEADER_OFFSET_H))
 
 	// Create image buf
@@ -330,6 +331,10 @@ func handle_player_num(client *openai.Client, display_screenshot *image.RGBA) {
 	if err != nil {
 		panic(err)
 	}
+
+	// Do two things in this function
+	// 1. Determine player counts
+	// 2. Look for "to vote!" to determine their pose
 
 	chat_output := chat_completion.Choices[0].Message.Content
 	if strings.Contains(chat_output, "THE_TEXT:") {
@@ -414,12 +419,12 @@ func main_loop() {
 		}
 
 		// Debug save
-		//var img_buf bytes.Buffer
-		//err = jpeg.Encode(&img_buf, img, nil)
-		//if err != nil {
-		//	panic(err)
-		//}
-		//os.WriteFile(fmt.Sprintf("test_frame_%d.jpg", frame), img_buf.Bytes(), 0644)
+		var img_buf bytes.Buffer
+		err = jpeg.Encode(&img_buf, img, nil)
+		if err != nil {
+			panic(err)
+		}
+		os.WriteFile(fmt.Sprintf("test_frame_%d.jpg", frame), img_buf.Bytes(), 0644)
 
 		// Only run computationally expensive task if we have to
 		recorded_number_of_clothing_items := determine_number_of_clothing_items(x_img_hash, img)
@@ -440,11 +445,11 @@ func main_loop() {
 		change_star_count(client, img)
 
 		// Attempt to change number of players
-		handle_player_num(client, img)
+		handle_header(client, img)
 
 		fmt.Printf("Time to take screenshot: %v\n", time.Since(start))
 
-		time.Sleep(time.Millisecond * 1000)
+		time.Sleep(time.Millisecond * 2500)
 
 		frame += 1
 
