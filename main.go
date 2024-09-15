@@ -67,6 +67,11 @@ const END_ROUND_HEADER_OFFSET_Y int = 90
 const END_ROUND_HEADER_OFFSET_W int = 615
 const END_ROUND_HEADER_OFFSET_H int = 97
 
+const USER_OFFSET_X int = 657
+const USER_OFFSET_Y int = 257
+const USER_OFFSET_W int = 201
+const USER_OFFSET_H int = 458
+
 type DTIData struct {
 	ClothingItems []string `json:"clothing_items"`
 	Theme         string   `json:"theme"`
@@ -339,6 +344,20 @@ func handle_header(client *openai.Client, display_screenshot *image.RGBA) {
 	chat_output := chat_completion.Choices[0].Message.Content
 	if strings.Contains(chat_output, "THE_TEXT:") {
 		header_str := chat_completion.Choices[0].Message.Content[strings.Index(chat_output, "THE_TEXT:")+len("THE_TEXT: "):]
+
+		// Hardcoding username for now
+		if strings.Contains(last_heading_value, "tgrcode") && strings.Contains(header_str, "to vote!") {
+			user_subimg := display_screenshot.SubImage(image.Rect(USER_OFFSET_X, USER_OFFSET_Y, USER_OFFSET_X+USER_OFFSET_W, USER_OFFSET_Y+USER_OFFSET_H))
+
+			// Create image buf
+			var img_buf bytes.Buffer
+			err := jpeg.Encode(&img_buf, user_subimg, nil)
+			if err != nil {
+				panic(err)
+			}
+
+			last_dti_data.Outfit = fmt.Sprintf("data:image/jpeg;base64,%s", base64.StdEncoding.EncodeToString(img_buf.Bytes()))
+		}
 
 		contains_possible_header_string := false
 		for _, possible_header_string := range possible_header_strings {
