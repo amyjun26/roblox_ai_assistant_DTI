@@ -6,6 +6,7 @@ function App() {
   const [score, setScore] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [actualResult, setActualResult] = useState("");
   const [waitingForGame, setIsWaitingForGame] = useState(true);
   const theme = "kids show";
   useEffect(() => {
@@ -45,9 +46,10 @@ function App() {
     const socket = new WebSocket("ws://localhost:8080/ws");
     socket.addEventListener("message", (event) => {
       let payload = JSON.parse(event.data);
-
       if (payload.complete) {
         console.log(payload);
+        const rating = payload.num_stars / payload.num_players;
+        setActualResult(rating * 2 + "/10");
       }
     });
   }, []);
@@ -86,7 +88,10 @@ function App() {
           ) : (
             <>
               <h3 className="text-xl font-bold text-pink-600 mb-4">
-                Score: {score}/10
+                AI Score: {score}/10
+              </h3>
+              <h3 className="text-xl font-bold text-pink-600 mb-4">
+                Game Score: {actualResult}/10
               </h3>
               <p className="text-pink-700">{feedback}</p>
               <br></br>
