@@ -1,6 +1,7 @@
 # 4A1W-hackmit2024
 
 ## Notes
+Our hackMIT team project! An AI stylist for the hit Roblox game Dress to Impress
 * Tried SmartCrop, didn't improve the images
 * Websocket payload to frontend looks like:
 ```json
