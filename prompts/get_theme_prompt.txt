@@ -1,0 +1,1 @@
+Print the text you see, OCR. If there is discernable text print 'THE_TEXT:' followed by the text, otherwise do not print that text
