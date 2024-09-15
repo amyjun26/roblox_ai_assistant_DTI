@@ -1,37 +1,61 @@
 import openai
+import base64
+import os 
+from dotenv import load_dotenv
+
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def evaluate_outfit(image_url, theme):
-    prompt = (f"You are a fashion judge for the Roblox game 'Dress To Impress.' Based on the theme {theme} and following guiding questions, provide detailed, objective feedback along with a specific numerical rating out of 10, where 10 is the best.\n"
-              f"Guiding Questions:\n"
-              f"1. Does this outfit feature unique and innovative design elements?\n"
-              f"2. How does the outfit push boundaries or experiment with fashion norms?\n"
-              f"3. How different is this outfit from the theme?\n"
-              f"4. Can you suggest an outfit piece that still fits within the theme, but also spices up the outfit a bit more in a creative way to elevate its themed style?\n\n"
-              f"Image URL: {image_url}\n\n"
-              f"Please provide the feedback and the rating in the following format:\n"
-              f"Feedback: [Your detailed feedback here]\n"
-              f"Rating: [Your rating out of 10]")
+def image_to_base64(image_path):
+    with open(image_path, "rb") as image_file:
+        # Read the image file in binary mode
+        image_data = image_file.read()
 
-    response = openai.Completion.create(
-        engine="text-davinci-003",  # which model to use???
-        prompt=prompt,
-        max_tokens=150
+        # Convert binary data to base64 string
+        base64_encoded = base64.b64encode(image_data).decode('utf-8')
+
+        # Create a Base64 URL
+        file_extension = image_path.split('.')[-1]
+        base64_url = f"data:image/{file_extension};base64,{base64_encoded}"
+
+    return base64_url
+
+def get_prompt(theme):
+    prompt = (
+        f"Based on the theme: {theme},\n"
+        "Does this outfit feature unique and innovative design elements?\n"
+        "How does the outfit push boundaries or experiment with fashion norms?\n"
+        f"How different is this outfit from the theme of {theme}\n"
+        "Can you suggest an outfit piece that still fits within the theme, but also spices up the outfit a bit more in a creative way to elevate it’s themed style?\n"
+        "Please provide the feedback (no need to repeat questions) and the rating in the following format:\n"
+        "Feedback: [Your detailed feedback here]\n"
+        "Rating: [Your rating here]"
+    )
+    return prompt
+    
+def evaluate_outfit(image_url, theme):
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",  
+        messages=[
+            {"role": "system", "content": "You are a fashion judge for the Roblox game 'Dress To Impress.' Provide detailed, objective feedback and a numerical rating on a scale from 1 to 10 based on the given questions."},
+            {"role": "user", "content": [{"type": "text", "text": get_prompt(theme)}, {"type": "image_url", "image_url": {"url": image_url}}]}
+        ],
+        max_tokens=200  
     )
 
-    result_text = response.choices[0].text.strip()
-    
-    # Extract feedback and rating
+    feedback = response['choices'][0]['message']['content'].strip()
+
     try:
-        feedback, rating = result_text.split('Rating:')
-        feedback = feedback.strip().replace('Feedback:', '').strip()
-        rating = rating.strip()
-        # Ensure rating is an integer
-        rating = int(rating) if rating.isdigit() else None
-    except ValueError:
-        feedback = result_text
-        rating = None
+        feedback_part, score_part = feedback.rsplit("Rating:", 1)
+        score = int(score_part.split('/')[0])  
+    except (ValueError, IndexError):
+        # default to a score of 0 if fail
+        feedback_part = feedback
+        score = 0
 
-    return feedback, rating
+    return feedback_part.strip(), score
 
+image_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'caillou.png')
+base64_url = image_to_base64(image_path)
+#print(get_prompt("Disney Princess"))
+print(evaluate_outfit(base64_url, "caillou"))

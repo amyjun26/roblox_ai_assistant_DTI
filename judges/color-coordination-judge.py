@@ -28,7 +28,7 @@ def get_prompt(theme):
         "Is there a balance between bright and neutral tones in this design?\n"
         "Is there a color that better suits the mood and theme?\n"
         "In the context of the theme, do you think the skin tone matches with the color and style of the clothes?\n"
-        "Please provide the feedback and the rating in the following format:\n"
+        "Please provide the feedback (no need to repeat questions) and the rating in the following format:\n"
         "Feedback: [Your detailed feedback here]\n"
         "Rating: [Your rating here]"
     )
