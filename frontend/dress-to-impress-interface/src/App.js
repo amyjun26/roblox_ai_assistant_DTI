@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./index.css";
+
 function App() {
   const [feedback, setFeedback] = useState("");
   const [score, setScore] = useState("");
@@ -51,6 +52,25 @@ function App() {
     });
   }, []);
 
+  const getRandomImage = (folder, numImages) => {
+    const randomIndex = Math.floor(Math.random() * numImages) + 1; // +1 because images are 1-indexed
+    return `${folder}/item${randomIndex}.jpg`;
+  };
+
+  // Number of images in each folder
+  const numHairImages = 85;
+  const numMakeupImages = 23;
+  const numTopsImages = 98;
+  const numPantsImages = 30;
+
+  // Generate image paths
+  const selectedImages = {
+    hair: getRandomImage("images/hair", numHairImages),
+    makeup: getRandomImage("images/makeup", numMakeupImages),
+    tops: getRandomImage("images/items/free_tops", numTopsImages),
+    pants: getRandomImage("images/items/free_skirts", numPantsImages),
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-pink-100">
       <div className="flex flex-col items-center">
@@ -69,6 +89,33 @@ function App() {
                 Score: {score}/10
               </h3>
               <p className="text-pink-700">{feedback}</p>
+              <br></br>
+              <br></br>
+              <h3 className="text-xl font-bold text-pink-600 mb-4">
+                You can also consider using these items next time:
+              </h3>
+              <div className="flex justify-center space-x-4 p-4">
+                <img
+                  src={`/${selectedImages.hair}`}
+                  alt="Random Hair"
+                  className="w-32 h-32 object-cover"
+                />
+                <img
+                  src={`/${selectedImages.makeup}`}
+                  alt="Random Makeup"
+                  className="w-32 h-32 object-cover"
+                />
+                <img
+                  src={`/${selectedImages.tops}`}
+                  alt="Random Top"
+                  className="w-32 h-32 object-cover"
+                />
+                <img
+                  src={`/${selectedImages.pants}`}
+                  alt="Random Pants"
+                  className="w-32 h-32 object-cover"
+                />
+              </div>
             </>
           )}
         </div>
