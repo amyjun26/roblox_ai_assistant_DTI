@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import "./App.css";
 
 function App() {
   const [judgesResponses, setJudgesResponses] = useState([]);
@@ -7,13 +7,13 @@ function App() {
 
   // Fetch the data from the Flask API
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/api/judges_responses')
-      .then(response => response.json())
-      .then(data => {
+    fetch("http://localhost:3000/api/judges_responses")
+      .then((response) => response.json())
+      .then((data) => {
         setJudgesResponses(data);
         setLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching judges' responses:", error);
       });
   }, []);

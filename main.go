@@ -11,11 +11,13 @@ import (
 	"image/jpeg"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/corona10/goimagehash"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -32,8 +34,8 @@ var GET_CAPTION_PROMPT string
 //go:embed prompts/get_judge_opinion_prompt.txt
 var GET_JUDGE_OPINION_PROMPT string
 
-//go:embed prompts/get_theme_prompt.txt
-var GET_THEME_PROMPT string
+//go:embed prompts/ocr_prompt.txt
+var OCR_PROMPT string
 
 const HEART_OFFSET_X float32 = 162.5
 const HEART_OFFSET_Y float32 = 171.1
@@ -55,13 +57,28 @@ const THEME_OFFSET_Y int = 89
 const THEME_OFFSET_W int = 696
 const THEME_OFFSET_H int = 57
 
+const STAR_COUNT_OFFSET_X int = 82
+const STAR_COUNT_OFFSET_Y int = 830
+const STAR_COUNT_OFFSET_W int = 141
+const STAR_COUNT_OFFSET_H int = 43
+
+const END_ROUND_HEADER_OFFSET_X int = 456
+const END_ROUND_HEADER_OFFSET_Y int = 90
+const END_ROUND_HEADER_OFFSET_W int = 615
+const END_ROUND_HEADER_OFFSET_H int = 97
+
 type DTIData struct {
 	ClothingItems []string `json:"clothing_items"`
 	Theme         string   `json:"theme"`
 	JudgeOpinion  string   `json:"judge_opinion"`
+	NumPlayers    int      `json:"num_players"`
+	NumStars      float32  `json:"num_stars"`
+	Complete      bool     `json:"complete"`
 }
 
+var last_dti_data DTIData = DTIData{}
 var websocket_con *websocket.Conn = nil
+var last_star_count int = 0
 
 func main() {
 	// Load .env
@@ -107,12 +124,13 @@ func main() {
 
 	// Run all our tasks
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 	go main_loop()
+	go http.ListenAndServe(fmt.Sprintf(":%v", 8080), r)
 	wg.Wait()
 }
 
-func determine_number_of_clothing_items(client *openai.Client, x_img_hash *goimagehash.ImageHash, display_screenshot *image.RGBA) int {
+func determine_number_of_clothing_items(x_img_hash *goimagehash.ImageHash, display_screenshot *image.RGBA) int {
 	num := 0
 	for x := 0; x < 5; x++ {
 		for y := 0; y < 4; y++ {
@@ -153,7 +171,7 @@ func get_dti_data(client *openai.Client, x_img_hash *goimagehash.ImageHash, disp
 	// Use chatgpt to do OCR, Tesseract does a poor job
 	chat_completion_theme, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
 		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(GET_THEME_PROMPT),
+			openai.UserMessage(OCR_PROMPT),
 			openai.UserMessageParts(openai.ImagePart(fmt.Sprintf("data:image/jpeg;base64,%s", base64.StdEncoding.EncodeToString(theme_img_buf.Bytes())))),
 		}),
 		Model: openai.F(openai.ChatModelGPT4o),
@@ -234,6 +252,79 @@ func get_dti_data(client *openai.Client, x_img_hash *goimagehash.ImageHash, disp
 	return dti_data
 }
 
+func change_star_count(client *openai.Client, display_screenshot *image.RGBA) {
+	subimg := display_screenshot.SubImage(image.Rect(STAR_COUNT_OFFSET_X, STAR_COUNT_OFFSET_Y, STAR_COUNT_OFFSET_X+STAR_COUNT_OFFSET_W, STAR_COUNT_OFFSET_Y+STAR_COUNT_OFFSET_H))
+
+	// Create image buf
+	var img_buf bytes.Buffer
+	err := jpeg.Encode(&img_buf, subimg, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	// Convert image to base64 string
+	// Get star count
+	chat_completion, err := client.Chat.Completions.New(context.Background(), openai.ChatCompletionNewParams{
+		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
+			openai.UserMessage(OCR_PROMPT),
+			openai.UserMessageParts(openai.ImagePart(fmt.Sprintf("data:image/jpeg;base64,%s", base64.StdEncoding.EncodeToString(img_buf.Bytes())))),
+		}),
+		Model: openai.F(openai.ChatModelGPT4o),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Proceed only if star count correct
+	chat_output := chat_completion.Choices[0].Message.Content
+	if strings.Contains(chat_output, "THE_TEXT:") {
+		star_count, err := strconv.Atoi(chat_completion.Choices[0].Message.Content)
+		if err == nil {
+			if star_count != last_star_count && last_star_count != 0 {
+				// Determine number of stars obtained
+				star_diff := star_count - last_star_count
+				last_star_count = star_count
+				last_dti_data.NumStars = float32(star_diff)
+
+				// Signal we are done
+				last_dti_data.Complete = true
+
+				// Send payload
+				send_dti_payload()
+			} else if last_star_count == 0 {
+				last_star_count = star_count
+			}
+		}
+	}
+}
+
+// Voting complete!
+
+// First up are
+// Next up is
+// Wooohoo! Look how gorgeous
+// We head over to
+// And last but not least
+// Voting complete!
+
+func send_dti_payload() {
+	spew.Dump(last_dti_data)
+
+	// Send to client
+	if websocket_con != nil {
+		dti_data_payload, err := json.Marshal(last_dti_data)
+		if err != nil {
+			panic(err)
+		}
+
+		// Send as JSON
+		err = websocket_con.WriteMessage(websocket.TextMessage, dti_data_payload)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func main_loop() {
 	msg_chan := make(chan string)
 
@@ -268,32 +359,35 @@ func main_loop() {
 			panic(err)
 		}
 
+		// Debug save
+		var img_buf bytes.Buffer
+		err = jpeg.Encode(&img_buf, img, nil)
+		if err != nil {
+			panic(err)
+		}
+		os.WriteFile(fmt.Sprintf("test_frame_%d.jpg", frame), img_buf.Bytes(), 0644)
+
 		// Only run computationally expensive task if we have to
-		recorded_number_of_clothing_items := determine_number_of_clothing_items(client, x_img_hash, img)
+		recorded_number_of_clothing_items := determine_number_of_clothing_items(x_img_hash, img)
 		if recorded_number_of_clothing_items != 0 && recorded_number_of_clothing_items != last_recorded_number_of_clothing_items {
 			last_recorded_number_of_clothing_items = recorded_number_of_clothing_items
 
 			// Get data
 			dti_data := get_dti_data(client, x_img_hash, img)
 
-			// Send to client
-			if websocket_con != nil {
-				dti_data_payload, err := json.Marshal(dti_data)
-				if err != nil {
-					panic(err)
-				}
+			spew.Dump(dti_data)
 
-				// Send as JSON
-				err = websocket_con.WriteMessage(websocket.TextMessage, dti_data_payload)
-				if err != nil {
-					panic(err)
-				}
-			}
+			last_dti_data = dti_data
+
+			send_dti_payload()
 		}
+
+		// Attempt to change star count
+		change_star_count(client, img)
 
 		fmt.Printf("Time to take screenshot: %v\n", time.Since(start))
 
-		time.Sleep(time.Millisecond * 1000)
+		time.Sleep(time.Millisecond * 3000)
 
 		frame += 1
 
