@@ -299,6 +299,15 @@ func change_star_count(client *openai.Client, display_screenshot *image.RGBA) {
 	}
 }
 
+var possible_header_strings [6]string = [6]string{
+	"First up are",
+	"Next up is",
+	"Wooohoo! Look how gorgeous",
+	"We head over to",
+	"And last but not least",
+	"Voting complete!",
+}
+
 func handle_player_num(client *openai.Client, display_screenshot *image.RGBA) {
 	subimg := display_screenshot.SubImage(image.Rect(END_ROUND_HEADER_OFFSET_X, END_ROUND_HEADER_OFFSET_Y, END_ROUND_HEADER_OFFSET_X+END_ROUND_HEADER_OFFSET_W, END_ROUND_HEADER_OFFSET_Y+END_ROUND_HEADER_OFFSET_H))
 
@@ -326,8 +335,17 @@ func handle_player_num(client *openai.Client, display_screenshot *image.RGBA) {
 	if strings.Contains(chat_output, "THE_TEXT:") {
 		header_str := chat_completion.Choices[0].Message.Content[strings.Index(chat_output, "THE_TEXT:")+len("THE_TEXT: "):]
 
+		contains_possible_header_string := false
+		for _, possible_header_string := range possible_header_strings {
+			if strings.Contains(header_str, possible_header_string) {
+				// Only need 1
+				contains_possible_header_string = true
+				break
+			}
+		}
+
 		// Header has changed, increment number of players
-		if header_str != last_heading_value {
+		if header_str != last_heading_value && contains_possible_header_string {
 			last_heading_value = header_str
 
 			// Increment by 2 if "and" is detected
@@ -342,15 +360,6 @@ func handle_player_num(client *openai.Client, display_screenshot *image.RGBA) {
 		}
 	}
 }
-
-// Voting complete!
-
-// First up are
-// Next up is
-// Wooohoo! Look how gorgeous
-// We head over to
-// And last but not least
-// Voting complete!
 
 func send_dti_payload() {
 	spew.Dump(last_dti_data)
@@ -435,7 +444,7 @@ func main_loop() {
 
 		fmt.Printf("Time to take screenshot: %v\n", time.Since(start))
 
-		time.Sleep(time.Millisecond * 3000)
+		time.Sleep(time.Millisecond * 1000)
 
 		frame += 1
 
