@@ -23,12 +23,14 @@ def image_to_base64(image_path):
 def get_prompt(theme):
     prompt = (
         f"Based on the theme: {theme},\n"
-        "Are the textures and fabrics used effectively?”\n"
-        "Is the outfit well-balanced in terms of colors, fit, and proportions?\n"
-        "In the context of the theme, evaluate how the skin tone matches with the color and style of the clothes.\n"
-        "Please provide the feedback and the rating in the following format:\n"
+        "Are the colors in this outfit complementary or harmonious?\n"
+        "Do the color choices enhance the overall aesthetic appeal of the outfit?\n"
+        "Is there a balance between bright and neutral tones in this design?\n"
+        "Is there a color that better suits the mood and theme?\n"
+        "In the context of the theme, do you think the skin tone matches with the color and style of the clothes?\n"
+        "Please provide the feedback (no need to repeat questions) and the rating in the following format:\n"
         "Feedback: [Your detailed feedback here]\n"
-        "Rating: [Your rating here]\n"
+        "Rating: [Your rating here]"
     )
     return prompt
     
@@ -57,4 +59,4 @@ def evaluate_outfit(image_url, theme):
 image_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'caillou.png')
 base64_url = image_to_base64(image_path)
 #print(get_prompt("Disney Princess"))
-print(evaluate_outfit(base64_url, "brat"))
+print(evaluate_outfit(base64_url, "caillou"))

@@ -23,12 +23,13 @@ def image_to_base64(image_path):
 def get_prompt(theme):
     prompt = (
         f"Based on the theme: {theme},\n"
-        "Are the textures and fabrics used effectively?”\n"
-        "Is the outfit well-balanced in terms of colors, fit, and proportions?\n"
-        "In the context of the theme, evaluate how the skin tone matches with the color and style of the clothes.\n"
+        "How closely does this outfit align with the given theme?\n"
+        "Does this outfit evoke the mood or inspiration intended by the theme?\n"
+        "Are each of the outfit pieces matching with the theme?\n"
+        "Just a note, but don’t worry about skin color at all when evaluating the accuracy of the clothing pieces\n"
         "Please provide the feedback and the rating in the following format:\n"
         "Feedback: [Your detailed feedback here]\n"
-        "Rating: [Your rating here]\n"
+        "Rating: [Your rating here]"
     )
     return prompt
     
