@@ -60,3 +60,4 @@ image_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'caillou.pn
 base64_url = image_to_base64(image_path)
 #print(get_prompt("Disney Princess"))
 print(evaluate_outfit(base64_url, "caillou"))
+
