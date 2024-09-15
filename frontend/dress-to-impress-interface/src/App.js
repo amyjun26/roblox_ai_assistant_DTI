@@ -9,8 +9,7 @@ function App() {
   const [actualResult, setActualResult] = useState("");
   const [waitingForGame, setIsWaitingForGame] = useState(true);
   const [actualImageURL, setActualImageURL] = useState("");
-
-  const theme = "kids show";
+  const [theme, setTheme] = useState("");
 
   const socket = new WebSocket("ws://localhost:8080/ws");
   socket.addEventListener("message", (event) => {
@@ -20,6 +19,7 @@ function App() {
       const rating = payload.num_stars / payload.num_players;
       setActualResult(rating * 2 + "/10");
       setActualImageURL(payload.outfit);
+      setTheme(payload.theme);
     }
   });
 
