@@ -4,7 +4,7 @@ from color_coordination_judge import evaluate_outfit as color_coordination_evalu
 from creativity_judge import evaluate_outfit as creativity_judge_evaluate_outfit
 from technical_fashion_judge import evaluate_outfit as technical_fashion_evaluate_outfit
 
-openai.api_key = "sk-r_IF9spJBilKfacYvlYpiY9cgttmGFqqNg5G9qDE1DT3BlbkFJmkGNsgIfqLIS31B95LQ4_xBoj6kDABCrUZ4ktKuWkA"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # def adjust_credibility(rating):
 #         """
